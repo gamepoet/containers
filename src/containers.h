@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -96,6 +97,31 @@ void containers__array_free_impl(void* arr, void* allocator, const char* file, i
 void* containers__array_grow_impl(void* arr, uint32_t increment, uint32_t item_size, void* allocator, const char* file, int line, const char* func);
 void containers__array_memcpy(void* dest, const void* src, uint32_t size_bytes);
 void containers__array_check_min_count(void* arr, uint32_t min_count, const char* file, int line, const char* func);
+
+//
+// Hash
+//
+// This container is a hashtable without storage. Basically the hashtable stores the key hashes and value indices. It is
+// up to the user of the container to actually store the key and value data.
+//
+
+typedef struct hash_t {
+  uint32_t* keys;
+  uint32_t* values;
+  uint32_t capacity;
+  uint32_t count;
+} hash_t;
+
+uint32_t hash_count(const hash_t* hash);
+void hash_free(hash_t* hash, void* allocator);
+void hash_insert(hash_t* hash, uint32_t key, uint32_t value, void* allocator);
+uint32_t hash_lookup(const hash_t* hash, uint32_t key, uint32_t default_value);
+void hash_remove(hash_t* hash, uint32_t key);
+bool hash_contains(const hash_t* hash, uint32_t key);
+
+//
+// Library initialization and configuration
+//
 
 typedef struct containers_lib_config_t {
   // The function used to allocate memory. The default implementation is malloc().
