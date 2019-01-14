@@ -219,6 +219,39 @@ TEST_CASE("array") {
   }
 }
 
+TEST_CASE("array with custom alloc") {
+  containers_lib_config_t config;
+  containers_lib_config_init(&config);
+  config.alloc = [](size_t size, void* allocator, const char* file, int line, const char* func) {
+    ++(*(uint32_t*)allocator);
+    return malloc(size);
+  };
+  config.free = [](void* ptr, void* allocator, const char* file, int line, const char* func) {
+    --(*(uint32_t*)allocator);
+    free(ptr);
+  };
+  init_t init(&config);
+
+  SECTION("the allocator is passed to the alloc and free funcs") {
+    uint32_t allocator_a = 0;
+    uint32_t allocator_b = 0;
+    int* arr_a = NULL;
+    int* arr_b = NULL;
+    array_push(arr_a, 1, &allocator_a);
+    CHECK(allocator_a == 1);
+    array_push(arr_b, 1, &allocator_b);
+    CHECK(allocator_b == 1);
+    array_reserve(arr_a, 128, &allocator_a);
+    CHECK(allocator_a == 1);
+    array_reserve(arr_b, 128, &allocator_b);
+    CHECK(allocator_b == 1);
+    array_free(arr_a, &allocator_a);
+    CHECK(allocator_a == 0);
+    array_free(arr_b, &allocator_b);
+    CHECK(allocator_b == 0);
+  }
+}
+
 #ifdef CONTAINERS_CHECK_ENABLED
 TEST_CASE("array with checks") {
   containers_lib_config_t config;
