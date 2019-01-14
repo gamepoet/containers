@@ -52,7 +52,6 @@ if (CONTAINERS_BUILD_TESTS)
   add_executable(
     test_runner
     spec/array_spec.cpp
-    spec/hash_spec.cpp
     spec/main.cpp
     spec/utils.cpp
     spec/utils.h
