@@ -104,6 +104,11 @@ void containers__array_check_min_count(void* arr, uint32_t min_count, const char
 // This container is a hashtable without storage. Basically the hashtable stores the key hashes and value indices. It is
 // up to the user of the container to actually store the key and value data.
 //
+// The implementation uses robin hood hashing (a variation on linear probing) to deal with collisions.
+//
+// The max load factor is 90% which when exceeded will cause growth and rehashing of all elements. Thus if the table is
+// large, it is important to properly estimate the size.
+//
 
 typedef struct hash_t {
   uint32_t* keys;
@@ -112,12 +117,30 @@ typedef struct hash_t {
   uint32_t count;
 } hash_t;
 
+// Gets the number of elements currently stored in the hash.
 uint32_t hash_count(const hash_t* hash);
+
+// Gets the capacity (in this case number of buckets) available to the hashtable.
+uint32_t hash_capacity(const hash_t* hash);
+
+// Frees the hash and effectively empties it.
 void hash_free(hash_t* hash, void* allocator);
+
+// Inserts the given key, value pair into the hashtable, growing more capacity if required.
 void hash_insert(hash_t* hash, uint32_t key, uint32_t value, void* allocator);
+
+// Finds the value stored with the key in the hashtable. If the key is not found the given default value will be returned.
 uint32_t hash_lookup(const hash_t* hash, uint32_t key, uint32_t default_value);
+
+// Removes the value associated with the given key if it exists in the table.
 void hash_remove(hash_t* hash, uint32_t key);
+
+// Tests if the hashtable contains the given key.
 bool hash_contains(const hash_t* hash, uint32_t key);
+
+// Ensures the hashtable can hold at least the given number of elements. Note that the hashtable may actually contain
+// more buckets than requested due to a requirement that the capacity needs to be a power of 2.
+void hash_reserve(hash_t* hash, uint32_t capacity, void* allocator);
 
 //
 // Library initialization and configuration

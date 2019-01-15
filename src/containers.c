@@ -8,39 +8,28 @@ static const uint32_t HASH_LOAD_FACTOR_PERCENT = 90;
 
 static containers_lib_config_t s_config;
 
-void* default_alloc(size_t size_bytes, void* allocator, const char* file, int line, const char* func) {
+static void* default_alloc(size_t size_bytes, void* allocator, const char* file, int line, const char* func) {
   return malloc(size_bytes);
 }
 
-void default_free(void* ptr, void* allocator, const char* file, int line, const char* func) {
+static void default_free(void* ptr, void* allocator, const char* file, int line, const char* func) {
   free(ptr);
 }
 
-void default_assert_failed(const char* expression, const char* message, const char* file, int line, const char* func) {
+static void default_assert_failed(const char* expression, const char* message, const char* file, int line, const char* func) {
   fprintf(stderr, "ASSERTION FAILED\nexpression: %s\nmessage: %s\nfile: %s\nline: %d\nfunction: %s\n", expression, message, file, line, func);
 }
 
-void containers_lib_config_init(containers_lib_config_t* config) {
-  if (config == NULL) {
-    return;
-  }
-
-  config->alloc = &default_alloc;
-  config->free = &default_free;
-  config->assert_failed = &default_assert_failed;
-}
-
-void containers_lib_init(const containers_lib_config_t* config) {
-  if (config == NULL) {
-    containers_lib_config_init(&s_config);
-  }
-  else {
-    s_config = *config;
-  }
-}
-
-void containers_lib_shutdown() {
-  memset(&s_config, 0, sizeof(s_config));
+static uint32_t next_pow_2(uint32_t value) {
+  --value;
+  value |= (value >> 1);
+  value |= (value >> 2);
+  value |= (value >> 4);
+  value |= (value >> 8);
+  value |= (value >> 16);
+  ++value;
+  value += (value == 0);
+  return value;
 }
 
 static void hash_insert_impl(hash_t* hash, uint32_t key, uint32_t value) {
@@ -81,9 +70,9 @@ static void hash_insert_impl(hash_t* hash, uint32_t key, uint32_t value) {
   }
 }
 
-static void hash_grow(hash_t* hash, void* allocator) {
-  const uint32_t capacity_desired = hash->capacity * 2;
-  const uint32_t capacity_new = capacity_desired < HASH_INITIAL_CAPACITY ? HASH_INITIAL_CAPACITY : capacity_desired;
+static void hash_grow(hash_t* hash, uint32_t capacity_desired, void* allocator) {
+  const uint32_t capacity_pow2 = next_pow_2(capacity_desired);
+  const uint32_t capacity_new = capacity_pow2 < HASH_INITIAL_CAPACITY ? HASH_INITIAL_CAPACITY : capacity_pow2;
 
   // alloc new key and value arrays
   uint32_t* keys_new = (uint32_t*)s_config.alloc(capacity_new * sizeof(uint32_t), allocator, __FILE__, __LINE__, __func__);
@@ -111,12 +100,41 @@ static void hash_grow(hash_t* hash, void* allocator) {
   }
 
   // cleanup
-  s_config.free(keys_old, allocator, __FILE__, __LINE__, __func__);
-  s_config.free(values_old, allocator, __FILE__, __LINE__, __func__);
+  if (capacity_old > 0) {
+    s_config.free(keys_old, allocator, __FILE__, __LINE__, __func__);
+    s_config.free(values_old, allocator, __FILE__, __LINE__, __func__);
+  }
+}
+
+void containers_lib_config_init(containers_lib_config_t* config) {
+  if (config == NULL) {
+    return;
+  }
+
+  config->alloc = &default_alloc;
+  config->free = &default_free;
+  config->assert_failed = &default_assert_failed;
+}
+
+void containers_lib_init(const containers_lib_config_t* config) {
+  if (config == NULL) {
+    containers_lib_config_init(&s_config);
+  }
+  else {
+    s_config = *config;
+  }
+}
+
+void containers_lib_shutdown() {
+  memset(&s_config, 0, sizeof(s_config));
 }
 
 uint32_t hash_count(const hash_t* hash) {
   return hash->count;
+}
+
+uint32_t hash_capacity(const hash_t* hash) {
+  return hash->capacity;
 }
 
 void hash_free(hash_t* hash, void* allocator) {
@@ -133,7 +151,7 @@ void hash_free(hash_t* hash, void* allocator) {
 void hash_insert(hash_t* hash, uint32_t key, uint32_t value, void* allocator) {
   const uint32_t resize_threshold = (hash->capacity * HASH_LOAD_FACTOR_PERCENT) / 100;
   if (hash->count >= resize_threshold) {
-    hash_grow(hash, allocator);
+    hash_grow(hash, hash->capacity + 1, allocator);
   }
   hash_insert_impl(hash, key, value);
 }
@@ -276,6 +294,12 @@ void hash_remove(hash_t* hash, uint32_t key) {
   }
 
   --hash->count;
+}
+
+void hash_reserve(hash_t* hash, uint32_t capacity, void* allocator) {
+  if (capacity > hash->capacity) {
+    hash_grow(hash, capacity, allocator);
+  }
 }
 
 void containers__array_free_impl(void* arr, void* allocator, const char* file, int line, const char* func) {

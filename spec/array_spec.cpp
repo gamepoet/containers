@@ -266,22 +266,22 @@ TEST_CASE("array with checks") {
     CHECK_THROWS_WITH(array_pop(arr), "array must contain at least 1 element");
   }
 
-  SECTION("array_first throws if the array is empty") {
+  SECTION("array_first asserts if the array is empty") {
     int* arr = NULL;
     CHECK_THROWS_WITH(array_first(arr), "array must contain at least 1 element");
   }
 
-  SECTION("array_last throws if the array is empty") {
+  SECTION("array_last asserts if the array is empty") {
     int* arr = NULL;
     CHECK_THROWS_WITH(array_last(arr), "array must contain at least 1 element");
   }
 
-  SECTION("array_shift throws if the array is empty") {
+  SECTION("array_shift asserts if the array is empty") {
     int* arr = NULL;
     CHECK_THROWS_WITH(array_shift(arr), "array must contain at least 1 element");
   }
 
-  SECTION("array_pop_n throws if the array is too small") {
+  SECTION("array_pop_n asserts if the array is too small") {
     int* arr = NULL;
     CHECK_THROWS_WITH(array_pop_n(arr, 1), "array must contain at least 1 element");
     int items[] = {0, 1, 2, 3};
@@ -290,7 +290,7 @@ TEST_CASE("array with checks") {
     array_free(arr, NULL);
   }
 
-  SECTION("array_shift_n throws if the array is too small") {
+  SECTION("array_shift_n asserts if the array is too small") {
     int* arr = NULL;
     CHECK_THROWS_WITH(array_shift_n(arr, 1), "array must contain at least 1 element");
     int items[] = {0, 1, 2, 3};
