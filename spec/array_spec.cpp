@@ -217,6 +217,24 @@ TEST_CASE("array") {
     CHECK(arr[5] == 2);
     array_free(arr, NULL);
   }
+
+  SECTION("array_set_empty handles NULL") {
+    int* arr = NULL;
+    array_set_empty(arr);
+    CHECK(array_count(arr) == 0);
+  }
+
+  SECTION("array_set_empty zeroes the count") {
+    int* arr = NULL;
+    array_push(arr, 0, NULL);
+    array_set_empty(arr);
+    CHECK(array_count(arr) == 0);
+    array_push(arr, 0, NULL);
+    array_push(arr, 1, NULL);
+    array_push(arr, 2, NULL);
+    array_set_empty(arr);
+    CHECK(array_count(arr) == 0);
+  }
 }
 
 TEST_CASE("array with custom alloc") {

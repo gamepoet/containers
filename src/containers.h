@@ -44,6 +44,9 @@ typedef struct array_header_t {
 // Gets the number of elements currently stored in the array.
 #define array_count(arr)                              ((arr) ? array__raw_count(arr) : 0)
 
+// Zeroes the length of the array.
+#define array_set_empty(arr)                          ((arr) ? (array__raw_count(arr) = 0, 0) : 0)
+
 // Gets the current capacity of the array (total count before re-allocation must occur).
 #define array_capacity(arr)                           ((arr) ? array__raw_capacity(arr) : 0)
 
