@@ -93,6 +93,32 @@ typedef struct array_header_t {
 #define array_unshift_n(arr, items, n, allocator)     (array__maybe_grow(arr, n, allocator), containers__array_memcpy((arr) + (n), arr, sizeof(*(arr)) * (array__raw_count(arr))), containers__array_memcpy(arr, items, (n) * sizeof(*(arr))), array__raw_count(arr) += (n))
 #define array_push_front_n(arr, items, n, allocator)  (array_unshift_n(arr, items, n, allocator))
 
+// Removes the element at the given index and moves all the elements after it to fill in the hole.
+#define array_remove_at(arr, index) \
+  ( \
+    array__check_min_count(arr, (index) + 1), \
+    ( \
+      (index) < (array__raw_count(arr) - 1) ? \
+        (containers__array_memcpy((arr) + (index), (arr) + (index) + 1, sizeof(*(arr)) * (array__raw_count(arr) - (index) - 1)), 0) \
+      : \
+        0 \
+    ), \
+    --array__raw_count(arr) \
+  )
+
+// Removes the element at the given index swapping the last element in to fill the hole.
+#define array_remove_at_swap(arr, index) \
+  ( \
+    array__check_min_count(arr, (index) + 1), \
+    ( \
+      (index) < (array__raw_count(arr) - 1) ? \
+        ((arr)[index] = (arr)[array_count(arr) - 1], 0) \
+      : \
+        0 \
+    ), \
+    --array__raw_count(arr) \
+  )
+
 // clang-format on
 
 // INTERNAL

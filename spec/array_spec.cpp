@@ -235,6 +235,60 @@ TEST_CASE("array") {
     array_set_empty(arr);
     CHECK(array_count(arr) == 0);
   }
+
+  SECTION("array_remove_at removes the appropriate element") {
+    int* arr = NULL;
+    array_push(arr, 0, NULL);
+    array_push(arr, 1, NULL);
+    array_push(arr, 2, NULL);
+    array_push(arr, 3, NULL);
+    array_push(arr, 4, NULL);
+    array_push(arr, 5, NULL);
+
+    // remove from end
+    array_remove_at(arr, 5);
+    CHECK(array_count(arr) == 5);
+    CHECK(arr[0] == 0);
+    CHECK(arr[1] == 1);
+    CHECK(arr[2] == 2);
+    CHECK(arr[3] == 3);
+    CHECK(arr[4] == 4);
+
+    // remove from the middle
+    array_remove_at(arr, 2);
+    CHECK(array_count(arr) == 4);
+    CHECK(arr[0] == 0);
+    CHECK(arr[1] == 1);
+    CHECK(arr[2] == 3);
+    CHECK(arr[3] == 4);
+  }
+
+  SECTION("array_remove_at_swap removes the appropriate element") {
+    int* arr = NULL;
+    array_push(arr, 0, NULL);
+    array_push(arr, 1, NULL);
+    array_push(arr, 2, NULL);
+    array_push(arr, 3, NULL);
+    array_push(arr, 4, NULL);
+    array_push(arr, 5, NULL);
+
+    // remove from end
+    array_remove_at_swap(arr, 5);
+    CHECK(array_count(arr) == 5);
+    CHECK(arr[0] == 0);
+    CHECK(arr[1] == 1);
+    CHECK(arr[2] == 2);
+    CHECK(arr[3] == 3);
+    CHECK(arr[4] == 4);
+
+    // remove from the middle
+    array_remove_at_swap(arr, 2);
+    CHECK(array_count(arr) == 4);
+    CHECK(arr[0] == 0);
+    CHECK(arr[1] == 1);
+    CHECK(arr[2] == 4);
+    CHECK(arr[3] == 3);
+  }
 }
 
 TEST_CASE("array with custom alloc") {
